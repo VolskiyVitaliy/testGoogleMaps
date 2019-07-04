@@ -134,6 +134,7 @@ class SiteController extends Controller
      * Display points.
      *
      * @return string
+     *
      * @throws Exception if incorrect data
      *
      * @throws Exception if no all arguments

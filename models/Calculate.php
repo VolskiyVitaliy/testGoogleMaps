@@ -8,8 +8,8 @@ class Calculate
 {
     /**
      * Random value
-     * @param $min
-     * @param $max
+     * @param double $min
+     * @param double $max
      * @return double random value
      */
     public static function randomFloat($min, $max)
@@ -18,8 +18,8 @@ class Calculate
     }
     /**
      * Calculate distance
-     * @param $p first point
-     * @param $q second point
+     * @param array $p first point
+     * @param array $q second point
      * @return double distance
      */
     public static function LatLngDist($p, $q) {
