@@ -12,7 +12,8 @@ use yii\filters\VerbFilter;
 use app\models\LoginForm;
 use app\models\ContactForm;
 use app\models\Point;
-use yii\base\Exception;
+use app\models\PointForm;
+use yii\helpers\Json;
 
 class SiteController extends Controller
 {
@@ -135,33 +136,31 @@ class SiteController extends Controller
      *
      * @return string
      *
-     * @throws Exception if incorrect data
-     *
-     * @throws Exception if no all arguments
      */
     public function actionPoint()
     {
+        $model = new PointForm();
         $params = Yii::$app->request->get();
         $correctPoints = array();
-        if (isset($params['lang']) && isset($params['lat']) && isset($params['radius'])) {
-            if (is_numeric($params['lang']) && is_numeric($params['lat']) && is_numeric($params['radius'])) {
-                $points = Point::find()->all();
-                foreach ($points as $point) {
-                    if ($params['radius'] >= Calculate::LatLngDist(array($params['lat'], $params['lang']), array($point->latitude, $point->longitude))) {
-                        array_push($correctPoints, array('latitude' => $point->latitude, 'longitude' => $point->longitude));
-                    }
+        if ($model->load($params) && $model->validate()) {
+            $points = Point::find()->all();
+            foreach ($points as $point) {
+                if ($model->radius >= Calculate::LatLngDist(array($model->latitude, $model->longitude), array($point->latitude, $point->longitude))) {
+                    array_push($correctPoints, array('latitude' => $point->latitude, 'longitude' => $point->longitude));
                 }
-                return $this->render('point', [
-                    'correctPoints' => $correctPoints,
-                    'pointMain' => json_encode(array($params['lat'], $params['lang'])),
-                    'json' => json_encode($correctPoints)
-                ]);
-            } else {
-                throw new Exception('Incorrect data');
             }
+            Yii::$app->view->registerJs("var points = " . Json::encode($correctPoints)
+                . "; var point = " . Json::encode(array($model->latitude, $model->longitude)) .
+                ";",  \yii\web\View::POS_HEAD);
+            return $this->render('point-confirm', [
+                'correctPoints' => $correctPoints,
+//                'pointMain' => json_encode(array($model->latitude, $model->longitude)),
+//                'json' => json_encode($correctPoints)
+            ]);
         } else {
-            throw new Exception('No all arguments');
+            return $this->render('point', ['model' => $model]);
         }
+
     }
 
     /**
@@ -169,7 +168,8 @@ class SiteController extends Controller
      *
      * @return string
      */
-    public function actionRandom()
+    public
+    function actionRandom()
     {
         Point::deleteAll();
         for ($i = 0; $i < 100; $i++) {
